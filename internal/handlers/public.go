@@ -273,7 +273,7 @@ func checkAuth(id string, date string, hash string) (string, error) {
 		"id": id,
 		"exp": time.Now().Add(time.Hour * 72).Unix(),
 	})
-	return token.SignedString(util.Config.HmacSampleSecret)
+	return token.SignedString([]byte(util.Config.HmacSampleSecret))
 }
 
 func abs(a time.Duration) time.Duration {
@@ -289,14 +289,4 @@ func sha(k string) string {
 	hash := hex.EncodeToString(h.Sum(nil))
 	logrus.Debugf("k: %s, hs: %s", k, hash)
 	return hash
-}
-
-func tokencheck(token *jwt.Token) (interface{}, error) {
-	// Don't forget to validate the alg is what you expect:
-	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-		return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-	}
-
-	// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
-	return []byte("secret"), nil
 }
