@@ -21,7 +21,7 @@ type Configuration struct {
 	Backend          string        `yaml:"Backend" env:"BACKEND"`
 	AuthBackend      string        `yaml:"AuthBackend" env:"AUTH_BACKEND"`
 	JwtSalt 				 string        `yaml:"JwtSalt" env:"JWT_SALT"`
-	HmacSampleSecret string        `yaml:"HmacSampleSecret" env:"JWT_SALT"`
+	HmacSampleSecret string        `yaml:"HmacSampleSecret" env:"HMAC_SECRET"`
 	UseSSL           bool          `yaml:"EnableSSL" env:"USE_SSL"`
 	EnableDebugMode  bool          `yaml:"EnableDebugMode" env:"ENABLE_DEBUG_MODE"`
 	EnableAccessLogs bool          `yaml:"EnableAccessLogs" env:"ENABLE_ACCESS_LOGS"`
