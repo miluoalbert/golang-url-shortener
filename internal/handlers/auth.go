@@ -65,6 +65,13 @@ func (h *Handler) initProxyAuth() {
 	h.engine.POST("/api/v1/auth/check", h.handleAuthCheck)
 }
 
+// initProxyAuth intializes data structures for simple jwt authentication mode
+func (h *Handler) initJwtAuth() {
+	h.providers = []string{}
+	h.providers = append(h.providers, "jwt")
+	h.engine.POST("/api/v1/auth/check", h.handleAuthCheck)
+}
+
 func (h *Handler) parseJWT(wt string) (*auth.JWTClaims, error) {
 	token, err := jwt.ParseWithClaims(wt, &auth.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return util.GetPrivateKey(), nil
@@ -76,6 +83,29 @@ func (h *Handler) parseJWT(wt string) (*auth.JWTClaims, error) {
 		return nil, errors.New("token is not valid")
 	}
 	return token.Claims.(*auth.JWTClaims), nil
+}
+
+func (h *Handler) parseSimpleJWT(wt string) (*auth.JWTClaims, error) {
+	token, err := jwt.ParseWithClaims(wt, &auth.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(util.Config.HmacSampleSecret), nil
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "could not parse token")
+	}
+	if !token.Valid {
+		return nil, errors.New("token is not valid")
+	}
+	id := token.Claims.(jwt.MapClaims)["id"].(string)
+	claims := &auth.JWTClaims{
+		OAuthID:       id,
+		OAuthName:     id,
+		OAuthPicture:  "/images/proxy_user.png",
+		OAuthProvider: "jwt",
+	}
+	return claims, nil
 }
 
 // oAuthMiddleware implements an auth layer that validates a JWT token
@@ -118,6 +148,30 @@ func (h *Handler) proxyAuthMiddleware(c *gin.Context) {
 			"error": "authentication failed",
 		})
 		logrus.Errorf("Authentication middleware check failed: %v\n", authError)
+		return
+	}
+	c.Next()
+}
+
+// jwtAuthMiddleware implements an auth layer use jwt
+func (h *Handler) jwtAuthMiddleware(c *gin.Context) {
+	authError := func() error {
+		wt := c.GetHeader("Authorization")
+		if wt == "" {
+			return errors.New("Authorization header not set")
+		}
+		claims, err := h.parseSimpleJWT(wt)
+		if err != nil {
+			return errors.Wrap(err, "could not parse JWT")
+		}
+		c.Set("user", claims)
+		return nil
+	}()
+	if authError != nil {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+			"error": "authentication failed",
+		})
+		logrus.Debugf("Authentication middleware check failed: %v\n", authError)
 		return
 	}
 	c.Next()
@@ -174,6 +228,8 @@ func (h *Handler) handleAuthCheck(c *gin.Context) {
 		// for us and we are only testing that the middleware successfully
 		// pulled the necessary headers from the request.
 		claims, err = h.fakeClaimsForProxy(c)
+	} else if util.GetConfig().AuthBackend == "jwt" {
+		claims, err = h.parseSimpleJWT(data.Token)
 	} else {
 		claims, err = h.parseJWT(data.Token)
 	}

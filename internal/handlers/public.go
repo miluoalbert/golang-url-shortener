@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"crypto/hmac"
+	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -11,11 +13,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/miluoalbert/golang-url-shortener/internal/handlers/auth"
 	"github.com/miluoalbert/golang-url-shortener/internal/stores/shared"
 	"github.com/miluoalbert/golang-url-shortener/internal/util"
 	"golang.org/x/crypto/bcrypt"
+)
+
+const(
+	timeTolerance = time.Minute * 5
 )
 
 // requestHelper is used to help in- and outgoing requests for json
@@ -187,6 +194,31 @@ func (h *Handler) handleRecent(c *gin.Context) {
 	c.JSON(http.StatusOK, entries)
 }
 
+type tokenInfo struct {
+	Token string `json:"token"`
+}
+
+func (h *Handler) handleLogin(c *gin.Context) {
+	var data struct {
+		ID string `binding:"required"`
+		Date string `binding:"required"`
+		Hash string `binding:"required"`
+	}
+	if err := c.ShouldBind(&data); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	token, err := checkAuth(data.ID, data.Date, data.Hash)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, tokenInfo{
+		Token: token,
+	})
+	return
+}
+
 func (h *Handler) handleDelete(c *gin.Context) {
 	givenHmac, err := base64.RawURLEncoding.DecodeString(c.Param("hash"))
 	if err != nil {
@@ -222,4 +254,47 @@ func (h *Handler) registerVisitor(id string, c *gin.Context) {
 		UTMContent:  c.Query("utm_content"),
 		UTMTerm:     c.Query("utm_term"),
 	})
+}
+
+func checkAuth(id string, date string, hash string) (string, error) {
+	layout := "2006-01-02T15:04:05.000Z"
+	t, err := time.Parse(layout, date)
+	if err != nil {
+		return "", fmt.Errorf("CheckAuth parse time error: %v", err)
+	}
+	if abs(time.Now().Sub(t)) > timeTolerance {
+		return "", fmt.Errorf("CheckAuth time tolerance check failed: %v", time.Now().Sub(t))
+	}
+	if sha(id + util.GetConfig().JwtSalt + date) != hash {
+		return "", fmt.Errorf("CheckAuth hash check failed")
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id": id,
+		"exp": time.Now().Add(time.Hour * 72).Unix(),
+	})
+	return token.SignedString(util.Config.HmacSampleSecret)
+}
+
+func abs(a time.Duration) time.Duration {
+	if a >= 0 {
+			return a
+	}
+	return -a
+}
+
+func sha(k string) string {
+	h := sha256.New()
+	h.Write([]byte(k))
+	hash := hex.EncodeToString(h.Sum(nil))
+	return hash
+}
+
+func tokencheck(token *jwt.Token) (interface{}, error) {
+	// Don't forget to validate the alg is what you expect:
+	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+		return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+	}
+
+	// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
+	return []byte("secret"), nil
 }

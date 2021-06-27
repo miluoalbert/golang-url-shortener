@@ -155,6 +155,9 @@ func (h *Handler) setHandlers() error {
 	case "proxy":
 		logrus.Info("Using OAuth auth backend: proxy")
 		protected.Use(h.proxyAuthMiddleware)
+	case "jwt":
+		logrus.Info("Using OAuth auth backend: jwt")
+		protected.Use(h.jwtAuthMiddleware)
 	default:
 		logrus.Fatalf("Auth backend method '%s' is not recognized", util.GetConfig().AuthBackend)
 	}
@@ -166,6 +169,7 @@ func (h *Handler) setHandlers() error {
 	h.engine.GET("/api/v1/info", h.handleInfo)
 	h.engine.GET("/api/v1/displayURL", h.handleDisplayURL)
 	h.engine.GET("/d/:id/:hash", h.handleDelete)
+	h.engine.POST("/api/v1/EJLOpLogin", h.handleLogin)
 	h.engine.GET("/ok", h.handleHealthcheck)
 
 	assetBox := packr.New("Assets", "../../web/build")
