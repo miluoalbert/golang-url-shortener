@@ -10,10 +10,11 @@ install:
   - nvm use stable
   - npm install
 script:
-  - make
+  - ./build/build-front.sh
   - goveralls -service=travis-ci -ignore="internal/handlers/static.go,internal/handlers/tmpls/tmpls.go"
-  - make buildDockerImage
-  - 'if [[ "$TRAVIS_PULL_REQUEST" = "false" && "$TRAVIS_BRANCH" = "master" ]]; then docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD" && docker push mxschmitt/golang_url_shortener && docker push mxschmitt/golang_url_shortener:arm; fi'
+  # - make buildDockerImage
+  - ./build/build.sh
+  - 'if [[ "$TRAVIS_PULL_REQUEST" = "false" && "$TRAVIS_BRANCH" = "master" ]]; then docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD" && docker push miluoabt/golang_url_shortener; fi'
 # deploy:
 #   provider: bintray
 #   user: mxschmitt
