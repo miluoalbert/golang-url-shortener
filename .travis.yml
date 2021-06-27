@@ -8,10 +8,10 @@ install:
   - . $HOME/.nvm/nvm.sh
   - nvm install stable
   - nvm use stable
-  - npm install
+  - cd web && npm install && cd ..
 script:
   - ./build/build-front.sh
-  - goveralls -service=travis-ci -ignore="internal/handlers/static.go,internal/handlers/tmpls/tmpls.go"
+  # - goveralls -service=travis-ci -ignore="internal/handlers/static.go,internal/handlers/tmpls/tmpls.go"
   # - make buildDockerImage
   - ./build/build.sh
   - 'if [[ "$TRAVIS_PULL_REQUEST" = "false" && "$TRAVIS_BRANCH" = "master" ]]; then docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD" && docker push miluoabt/golang_url_shortener; fi'
