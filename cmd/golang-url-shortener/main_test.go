@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mxschmitt/golang-url-shortener/internal/util"
+	"github.com/miluoalbert/golang-url-shortener/internal/util"
 )
 
 func TestInitShortener(t *testing.T) {

@@ -1,16 +1,16 @@
 package auth
 
 import (
-        "context"
-        "encoding/json"
-        "net/url"
-        "strings"
+	"context"
+	"encoding/json"
+	"net/url"
+	"strings"
 
-        "github.com/mxschmitt/golang-url-shortener/internal/util"
-        "github.com/sirupsen/logrus"
+	"github.com/miluoalbert/golang-url-shortener/internal/util"
+	"github.com/sirupsen/logrus"
 
-        "github.com/pkg/errors"
-        "golang.org/x/oauth2"
+	"github.com/pkg/errors"
+	"golang.org/x/oauth2"
 )
 
 type oktaAdapter struct {

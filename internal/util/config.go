@@ -20,6 +20,7 @@ type Configuration struct {
 	DataDir          string        `yaml:"DataDir" env:"DATA_DIR"`
 	Backend          string        `yaml:"Backend" env:"BACKEND"`
 	AuthBackend      string        `yaml:"AuthBackend" env:"AUTH_BACKEND"`
+	JwtSalt 				 string        `yaml:"JwtSalt" env:"JWT_SALT"`
 	UseSSL           bool          `yaml:"EnableSSL" env:"USE_SSL"`
 	EnableDebugMode  bool          `yaml:"EnableDebugMode" env:"ENABLE_DEBUG_MODE"`
 	EnableAccessLogs bool          `yaml:"EnableAccessLogs" env:"ENABLE_ACCESS_LOGS"`
@@ -69,6 +70,7 @@ var Config = Configuration{
 	UseSSL:           false,
 	ShortedIDLength:  4,
 	AuthBackend:      "oauth",
+	JwtSalt:					"defaultsalt",
 	Redis: redisConf{
 		Host:         "127.0.0.1:6379",
 		MaxRetries:   3,

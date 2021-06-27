@@ -11,9 +11,9 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"github.com/mxschmitt/golang-url-shortener/internal/handlers/auth"
-	"github.com/mxschmitt/golang-url-shortener/internal/stores"
-	"github.com/mxschmitt/golang-url-shortener/internal/util"
+	"github.com/miluoalbert/golang-url-shortener/internal/handlers/auth"
+	"github.com/miluoalbert/golang-url-shortener/internal/stores"
+	"github.com/miluoalbert/golang-url-shortener/internal/util"
 	"github.com/pkg/errors"
 )
 
