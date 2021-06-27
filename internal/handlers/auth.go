@@ -86,7 +86,7 @@ func (h *Handler) parseJWT(wt string) (*auth.JWTClaims, error) {
 }
 
 func (h *Handler) parseSimpleJWT(wt string) (*auth.JWTClaims, error) {
-	token, err := jwt.ParseWithClaims(wt, &auth.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(wt, &auth.SimpleJWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
@@ -98,7 +98,7 @@ func (h *Handler) parseSimpleJWT(wt string) (*auth.JWTClaims, error) {
 	if !token.Valid {
 		return nil, errors.New("token is not valid")
 	}
-	id := token.Claims.(jwt.MapClaims)["id"].(string)
+	id := token.Claims.(*auth.SimpleJWTClaims).ID
 	claims := &auth.JWTClaims{
 		OAuthID:       id,
 		OAuthName:     id,

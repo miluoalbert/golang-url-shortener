@@ -35,6 +35,12 @@ type JWTClaims struct {
 	OAuthPicture  string
 }
 
+// SimpleJWTClaims are the data and general information which is stored in the JWT
+type SimpleJWTClaims struct {
+	jwt.StandardClaims
+	ID string
+}
+
 // AdapterWrapper wraps an normal oAuth Adapter with some generic functions
 // to be implemented directly by the gin router
 type AdapterWrapper struct{ Adapter }
