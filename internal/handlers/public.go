@@ -18,6 +18,7 @@ import (
 	"github.com/miluoalbert/golang-url-shortener/internal/handlers/auth"
 	"github.com/miluoalbert/golang-url-shortener/internal/stores/shared"
 	"github.com/miluoalbert/golang-url-shortener/internal/util"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -286,6 +287,7 @@ func sha(k string) string {
 	h := sha256.New()
 	h.Write([]byte(k))
 	hash := hex.EncodeToString(h.Sum(nil))
+	logrus.Debugf("k: %s, hs: %s", k, hash)
 	return hash
 }
 
